@@ -99,7 +99,7 @@ kv_list=$(vault secrets list | grep kv | cut -d " " -f 1| tr "\n" " ")
 
 for kv_eng in $kv_list
 do
-    secret_path_list=$(vault kv list $kv_eng | tail -n +3 | tr "\n" " ")
+    secret_path_list=$(vault kv list $kv_eng  2>/dev/null | tail -n +3 | tr "\n" " ")
     echo Secret Lists in $kv_eng: $secret_path_list
     read -p "Alle löschen? (y/n)?" choice
     case "$choice" in
@@ -151,7 +151,7 @@ echo Vault Address: $VAULT_ADDR
 echo Vault Namespace: $VAULT_NAMESPACE
 echo "################################################"
 
-auth_list=$(vault auth list | cut -d " " -f 1 | tail -n +3 | tr "\n" " ")
+auth_list=$(vault auth list | grep -v token| cut -d " " -f 1 | tail -n +3 | tr "\n" " ")
 echo Auth Methods: $auth_list
 read -p "Alle löschen? (y/n)?" choice
 case "$choice" in
@@ -205,7 +205,7 @@ echo Vault Address: $VAULT_ADDR
 echo Vault Namespace: $VAULT_NAMESPACE
 echo "################################################"
 
-pol_list=$(vault policy list | tr "\n" " ")
+pol_list=$(vault policy list | grep -v default| tr "\n" " ")
 echo Policies List: $pol_list
 read -p "Alle löschen? (y/n)?" choice
 case "$choice" in
