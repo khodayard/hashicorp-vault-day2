@@ -1,6 +1,6 @@
 #Entities und Aliases
-clear
-echo "Schrit 1: Räumung alle Entities,Groups und ihre Aliases:"
+clear -x
+echo "Räumung alle Entities,Groups und ihre Aliases:"
 echo "################################################"
 echo "Wir sind gerade hier:"
 echo Vault Address: $VAULT_ADDR
@@ -44,19 +44,20 @@ case "$choice" in
 esac
 
 #PKI Secret Engines
-clear
-echo "Schrit 2: Räumung alle PKI Secret Engines und ihre Certificate:"
+clear -x
+echo "Räumung alle PKI Secret Engines Roles und ihre Certificate:"
 echo "################################################"
 echo "Wir sind gerade hier:"
 echo Vault Address: $VAULT_ADDR
 echo Vault Namespace: $VAULT_NAMESPACE
 echo "################################################"
-
 pki_list=$(vault secrets list | grep pki | cut -f 1 -d /)
 for pki_eng in $pki_list; 
 do
-    cert_list=$(vault list $pki_eng/certs| tail -n +3)
-    cert_count=$(vault list $pki_eng/certs| tail -n +3| wc -l)
+    roles_list=$(vault list $pki_eng/roles | tail -n +3)
+    cert_list=$(vault list $pki_eng/certs | tail -n +3 | tr "\n" " ")
+    cert_count=$(vault list $pki_eng/certs | tail -n +3| wc -l)
+    echo "####################CERTS#######################"
     echo PKI: $pki_eng
     echo Anzahl Zertifikate: $cert_count
     read -p "Alle Revoke und PKI Tidy machen? (y/n)?" choice
@@ -70,11 +71,24 @@ do
         ;;
         * ) echo "Abgesagt.";;
     esac
+    echo "#####################ROLES#######################"
+    echo PKI: $pki_eng
+    echo Role List: $roles_list
+    read -p "Alle löschen? (y/n)?" choice
+    case "$choice" in
+        y|Y ) echo "Result:";
+            for role_ins in $roles_list
+                do
+                    vault delete $pki_engs/roles/$role_ins
+                done
+        ;;
+        * ) echo "Abgesagt.";;
+    esac
 done
 
 #KV Secret Engines
-clear
-echo "Schrit 3: Räumung alle Secret Engines und ihre Secrets:"
+clear -x
+echo "Räumung alle Secret Engines und ihre Secrets:"
 echo "################################################"
 echo "Wir sind gerade hier:"
 echo Vault Address: $VAULT_ADDR
@@ -106,9 +120,53 @@ do
     esac
 done
 
+#Transit Secret Engines
+clear -x
+echo "Räumung alle Transit Secret Engines:"
+echo "################################################"
+echo "Wir sind gerade hier:"
+echo Vault Address: $VAULT_ADDR
+echo Vault Namespace: $VAULT_NAMESPACE
+echo "################################################"
+
+tr_list=$(vault secrets list | grep transit | cut -d " " -f 1| tr "\n" " ")
+echo Transit Secret Engine: $tr_list
+read -p "Alle löschen? (y/n)?" choice
+case "$choice" in
+    y|Y ) echo "Result:";
+        for tr_eng in $tr_list
+        do
+            vault secrets disable $tr_eng
+        done
+    ;;
+    * ) echo "Abgesagt.";;
+esac
+
+#Auth Methods
+clear -x
+echo "Räumung alle Auth Methods:"
+echo "################################################"
+echo "Wir sind gerade hier:"
+echo Vault Address: $VAULT_ADDR
+echo Vault Namespace: $VAULT_NAMESPACE
+echo "################################################"
+
+auth_list=$(vault auth list | cut -d " " -f 1 | tail -n +3 | tr "\n" " ")
+echo Auth Methods: $auth_list
+read -p "Alle löschen? (y/n)?" choice
+case "$choice" in
+    y|Y ) echo "Result:";
+        for auth_method in $auth_list
+        do
+            vault auth disable $auth_method
+        done
+    ;;
+    * ) echo "Abgesagt.";;
+esac
+
 #Leases
-clear
-echo "Schrit 4: Räumung alle Leases:"
+clear -x
+echo "Räumung alle Leases:"
 echo "################################################"
 echo "Wir sind gerade hier:"
 echo Vault Address: $VAULT_ADDR
@@ -139,8 +197,8 @@ do
 done
 
 #Policies
-clear
-echo "Schrit 2: Räumung alle Policies:"
+clear -x
+echo "Räumung alle Policies:"
 echo "################################################"
 echo "Wir sind gerade hier:"
 echo Vault Address: $VAULT_ADDR
