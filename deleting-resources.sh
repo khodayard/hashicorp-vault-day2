@@ -83,7 +83,7 @@ do
         y|Y ) echo "Result:";
             for role_ins in $roles_list
                 do
-                    vault delete $pki_engs/roles/$role_ins
+                    vault delete $pki_eng/roles/$role_ins
                 done
         ;;
         * ) echo "Abgesagt.";;
