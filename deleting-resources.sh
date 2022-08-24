@@ -64,6 +64,7 @@ do
     echo "####################CERTS#######################"
     echo PKI: $pki_eng
     echo Anzahl Zertifikate: $cert_count
+    vault write $pki_eng/tidy tidy_cert_store=true tidy_revoked_certs=true safety_buffer='1s'
     read -p "Alle Revoke und PKI Tidy machen? (y/n)?" choice
     case "$choice" in
         y|Y ) echo "Result:";
@@ -151,35 +152,9 @@ if [ $tr_count -gt 0 ] ; then
     esac
 fi
 
-#Auth Methods
-
-auth_list=$(vault auth list | grep -v token| cut -d " " -f 1 | tail -n +3 | tr "\n" " ")
-auth_count=$(vault auth list | grep -v token| cut -d " " -f 1 | tail -n +3 | wc -l)
-
-if [ $auth_count -gt 0 ] ; then
-    clear -x
-    echo "Räumung alle Auth Methods:"
-    echo "################################################"
-    echo "Wir sind gerade hier:"
-    echo Vault Address: $VAULT_ADDR
-    echo Vault Namespace: $VAULT_NAMESPACE
-    echo "################################################"
-    echo Auth Methods: $auth_list
-    read -p "Alle löschen? (y/n)?" choice
-    case "$choice" in
-        y|Y ) echo "Result:";
-            for auth_method in $auth_list
-            do
-                vault auth disable $auth_method
-            done
-        ;;
-        * ) echo "Abgesagt.";;
-    esac
-fi
-
 #Leases
 
-get_leases(){ curl -s --header "X-Vault-Token: $VAULT_TOKEN" --header "X-Vault-Namespace: $VAULT_NAMESPACE" --request LIST $VAULT_ADDR/v1/sys/leases/lookup/$1 | jq -r .data.keys[] ;}
+get_leases(){ vault list sys/leases/lookup/$1 |tail -n +3 ;}
 get_leases_path(){ get_leases $1 | grep -x '.\{3,70\}' ;}
 count_leases(){ get_leases $1 | grep -x '.\{70,75\}' | wc -l ;}
 
@@ -208,6 +183,32 @@ clear -x
         * ) echo "Abgesagt.";;
     esac
 done
+
+#Auth Methods
+
+auth_list=$(vault auth list | grep -v token| cut -d " " -f 1 | tail -n +3 | tr "\n" " ")
+auth_count=$(vault auth list | grep -v token| cut -d " " -f 1 | tail -n +3 | wc -l)
+
+if [ $auth_count -gt 0 ] ; then
+    clear -x
+    echo "Räumung alle Auth Methods:"
+    echo "################################################"
+    echo "Wir sind gerade hier:"
+    echo Vault Address: $VAULT_ADDR
+    echo Vault Namespace: $VAULT_NAMESPACE
+    echo "################################################"
+    echo Auth Methods: $auth_list
+    read -p "Alle löschen? (y/n)?" choice
+    case "$choice" in
+        y|Y ) echo "Result:";
+            for auth_method in $auth_list
+            do
+                vault auth disable $auth_method
+            done
+        ;;
+        * ) echo "Abgesagt.";;
+    esac
+fi
 
 #Policies
 
